@@ -1,0 +1,89 @@
+identity:
+  name: "delete_email"
+  author: "liux297"
+  label:
+    en_US: "Delete Email"
+    zh_Hans: "删除邮件"
+    pt_BR: "Delete Email"
+    ja_JP: "メール削除"
+description:
+  human:
+    en_US: "Delete emails (move to trash or permanently delete)"
+    zh_Hans: "删除邮件（移至回收站或永久删除）"
+    pt_BR: "Delete emails (move to trash or permanently delete)"
+    ja_JP: "メールを削除（ゴミ箱に移動または完全削除）"
+  llm: "Delete one or more emails. Can mark for deletion (move to trash) or permanently delete. Use email IDs from search_email results."
+parameters:
+  - name: folder
+    type: string
+    required: false
+    default: "INBOX"
+    label:
+      en_US: "Mail Folder"
+      zh_Hans: "邮件文件夹"
+      pt_BR: "Mail Folder"
+      ja_JP: "メールフォルダ"
+    human_description:
+      en_US: "The mailbox folder containing the emails"
+      zh_Hans: "包含邮件的邮箱文件夹"
+      pt_BR: "The mailbox folder containing the emails"
+      ja_JP: "メールを含むメールボックスフォルダ"
+    llm_description: "The mailbox folder containing the emails to delete. Default is INBOX."
+    form: llm
+  - name: email_ids
+    type: string
+    required: true
+    label:
+      en_US: "Email IDs"
+      zh_Hans: "邮件 ID"
+      pt_BR: "Email IDs"
+      ja_JP: "メール ID"
+    human_description:
+      en_US: "Comma-separated email IDs from search results"
+      zh_Hans: "搜索结果中的邮件 ID，多个用逗号分隔"
+      pt_BR: "Comma-separated email IDs from search results"
+      ja_JP: "検索結果からのメール ID（カンマ区切り）"
+    llm_description: "Comma-separated email IDs from search_email results, e.g. '1,2,3'"
+    form: llm
+  - name: permanent
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: "Permanent Delete"
+      zh_Hans: "永久删除"
+      pt_BR: "Permanent Delete"
+      ja_JP: "完全削除"
+    human_description:
+      en_US: "Permanently delete emails (cannot be recovered). If false, emails are moved to trash."
+      zh_Hans: "永久删除邮件（无法恢复）。如果为 false，邮件将移至回收站。"
+      pt_BR: "Permanently delete emails (cannot be recovered). If false, emails are moved to trash."
+      ja_JP: "メールを完全に削除（復元不可）。false の場合、メールはゴミ箱に移動されます。"
+    llm_description: "Set to true to permanently delete emails (expunge). Set to false (default) to just mark for deletion (move to trash)."
+    form: llm
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      description: "Operation status: success or error"
+    message:
+      type: string
+      description: "Result message"
+    folder:
+      type: string
+      description: "The folder where emails were deleted from"
+    permanent:
+      type: boolean
+      description: "Whether emails were permanently deleted"
+    success_count:
+      type: integer
+      description: "Number of emails successfully deleted"
+    failed_ids:
+      type: array
+      items:
+        type: string
+      description: "List of email IDs that failed to delete"
+extra:
+  python:
+    source: tools/delete_email.py

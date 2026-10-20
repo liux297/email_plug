@@ -1,0 +1,88 @@
+identity:
+  name: "move_email"
+  author: "liux297"
+  label:
+    en_US: "Move Email"
+    zh_Hans: "移动邮件"
+    pt_BR: "Move Email"
+    ja_JP: "メール移動"
+description:
+  human:
+    en_US: "Move emails to a different folder"
+    zh_Hans: "将邮件移动到另一个文件夹"
+    pt_BR: "Move emails to a different folder"
+    ja_JP: "メールを別のフォルダに移動"
+  llm: "Move one or more emails from one folder to another. Use email IDs from search_email results."
+parameters:
+  - name: source_folder
+    type: string
+    required: false
+    default: "INBOX"
+    label:
+      en_US: "Source Folder"
+      zh_Hans: "源文件夹"
+      pt_BR: "Source Folder"
+      ja_JP: "元フォルダ"
+    human_description:
+      en_US: "The folder containing the emails to move"
+      zh_Hans: "包含要移动邮件的文件夹"
+      pt_BR: "The folder containing the emails to move"
+      ja_JP: "移動するメールを含むフォルダ"
+    llm_description: "The source folder containing the emails to move. Default is INBOX."
+    form: llm
+  - name: target_folder
+    type: string
+    required: true
+    label:
+      en_US: "Target Folder"
+      zh_Hans: "目标文件夹"
+      pt_BR: "Target Folder"
+      ja_JP: "宛先フォルダ"
+    human_description:
+      en_US: "The folder to move emails to"
+      zh_Hans: "要移动到的目标文件夹"
+      pt_BR: "The folder to move emails to"
+      ja_JP: "メールの移動先フォルダ"
+    llm_description: "The target folder to move emails to, e.g. 'Archive', 'Trash', 'Important'"
+    form: llm
+  - name: email_ids
+    type: string
+    required: true
+    label:
+      en_US: "Email IDs"
+      zh_Hans: "邮件 ID"
+      pt_BR: "Email IDs"
+      ja_JP: "メール ID"
+    human_description:
+      en_US: "Comma-separated email IDs from search results"
+      zh_Hans: "搜索结果中的邮件 ID，多个用逗号分隔"
+      pt_BR: "Comma-separated email IDs from search results"
+      ja_JP: "検索結果からのメール ID（カンマ区切り）"
+    llm_description: "Comma-separated email IDs from search_email results, e.g. '1,2,3'"
+    form: llm
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      description: "Operation status: success or error"
+    message:
+      type: string
+      description: "Result message"
+    source_folder:
+      type: string
+      description: "The source folder"
+    target_folder:
+      type: string
+      description: "The target folder"
+    success_count:
+      type: integer
+      description: "Number of emails successfully moved"
+    failed_ids:
+      type: array
+      items:
+        type: string
+      description: "List of email IDs that failed to move"
+extra:
+  python:
+    source: tools/move_email.py

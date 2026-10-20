@@ -1,0 +1,152 @@
+identity:
+  author: "liux297"
+  name: "email_plug"
+  label:
+    en_US: "Email Plug"
+    zh_Hans: "邮件插件"
+    pt_BR: "Email Plug"
+    ja_JP: "Email Plug"
+  description:
+    en_US: "Complete email tools - send, search, and manage emails via SMTP/IMAP"
+    zh_Hans: "完整邮件工具 - 通过 SMTP/IMAP 发送、搜索和管理邮件"
+    pt_BR: "Complete email tools - send, search, and manage emails via SMTP/IMAP"
+    ja_JP: "完全なメールツール - SMTP/IMAP でメールの送信、検索、管理"
+  icon: "icon.svg"
+
+credentials_for_provider:
+  # SMTP Configuration
+  smtp_host:
+    type: "text-input"
+    required: true
+    label:
+      en_US: "SMTP Server"
+      zh_Hans: "SMTP 服务器地址"
+    placeholder:
+      en_US: "e.g. smtp.gmail.com"
+      zh_Hans: "例如 smtp.gmail.com"
+    help:
+      en_US: "The SMTP server host for sending emails."
+      zh_Hans: "用于发送邮件的 SMTP 服务器地址。"
+  smtp_port:
+    type: "text-input"
+    required: true
+    label:
+      en_US: "SMTP Port"
+      zh_Hans: "SMTP 端口"
+    placeholder:
+      en_US: "e.g. 587"
+      zh_Hans: "例如 587"
+    help:
+      en_US: "The SMTP server port (commonly 587 for TLS, 465 for SSL)."
+      zh_Hans: "SMTP 服务器端口（TLS 常用 587，SSL 常用 465）。"
+  smtp_encrypt_method:
+    type: "select"
+    required: true
+    default: "TLS"
+    options:
+      - value: "TLS"
+        label:
+          en_US: "START TLS"
+          zh_Hans: "START TLS加密"
+      - value: "SSL"
+        label:
+          en_US: "SSL"
+          zh_Hans: "SSL加密"
+      - value: "NONE"
+        label:
+          en_US: "NONE"
+          zh_Hans: "无加密"
+    label:
+      en_US: "SMTP Encryption"
+      zh_Hans: "SMTP 加密方式"
+    help:
+      en_US: "The encryption method for SMTP connection."
+      zh_Hans: "SMTP 连接的加密方式。"
+
+  # IMAP Configuration
+  imap_host:
+    type: "text-input"
+    required: true
+    label:
+      en_US: "IMAP Server"
+      zh_Hans: "IMAP 服务器地址"
+    placeholder:
+      en_US: "e.g. imap.gmail.com"
+      zh_Hans: "例如 imap.gmail.com"
+    help:
+      en_US: "The IMAP server host for receiving/searching emails."
+      zh_Hans: "用于接收/搜索邮件的 IMAP 服务器地址。"
+  imap_port:
+    type: "text-input"
+    required: false
+    default: "993"
+    label:
+      en_US: "IMAP Port"
+      zh_Hans: "IMAP 端口"
+    placeholder:
+      en_US: "e.g. 993"
+      zh_Hans: "例如 993"
+    help:
+      en_US: "The IMAP server port (commonly 993 for SSL, 143 for TLS)."
+      zh_Hans: "IMAP 服务器端口（SSL 常用 993，TLS 常用 143）。"
+  imap_encrypt_method:
+    type: "select"
+    required: false
+    default: "SSL"
+    options:
+      - value: "SSL"
+        label:
+          en_US: "SSL"
+          zh_Hans: "SSL加密"
+      - value: "TLS"
+        label:
+          en_US: "START TLS"
+          zh_Hans: "START TLS加密"
+      - value: "NONE"
+        label:
+          en_US: "NONE"
+          zh_Hans: "无加密"
+    label:
+      en_US: "IMAP Encryption"
+      zh_Hans: "IMAP 加密方式"
+    help:
+      en_US: "The encryption method for IMAP connection."
+      zh_Hans: "IMAP 连接的加密方式。"
+
+  # Account Configuration
+  email_account:
+    type: "text-input"
+    required: true
+    label:
+      en_US: "Email Address"
+      zh_Hans: "邮箱地址"
+    placeholder:
+      en_US: "your@email.com"
+      zh_Hans: "your@email.com"
+    help:
+      en_US: "The email address used for authentication."
+      zh_Hans: "用于认证的邮箱地址。"
+  email_password:
+    type: "secret-input"
+    required: true
+    label:
+      en_US: "Email Password / App Password"
+      zh_Hans: "邮箱密码 / 应用专用密码"
+    placeholder:
+      en_US: "Enter your email password or app-specific password"
+      zh_Hans: "输入邮箱密码或应用专用密码"
+    help:
+      en_US: "The password or app-specific password for the email account."
+      zh_Hans: "邮箱密码或应用专用密码。"
+
+tools:
+  - tools/send_email.yaml
+  - tools/search_email.yaml
+  - tools/mark_email.yaml
+  - tools/delete_email.yaml
+  - tools/move_email.yaml
+  - tools/list_folders.yaml
+
+extra:
+  python:
+    source: provider/email_plug.py

@@ -1,0 +1,98 @@
+identity:
+  name: "mark_email"
+  author: "liux297"
+  label:
+    en_US: "Mark Email"
+    zh_Hans: "标记邮件"
+    pt_BR: "Mark Email"
+    ja_JP: "メールマーク"
+description:
+  human:
+    en_US: "Mark emails as read or unread"
+    zh_Hans: "将邮件标记为已读或未读"
+    pt_BR: "Mark emails as read or unread"
+    ja_JP: "メールを既読または未読としてマーク"
+  llm: "Mark one or more emails as read or unread. Use email IDs from search_email results."
+parameters:
+  - name: folder
+    type: string
+    required: false
+    default: "INBOX"
+    label:
+      en_US: "Mail Folder"
+      zh_Hans: "邮件文件夹"
+      pt_BR: "Mail Folder"
+      ja_JP: "メールフォルダ"
+    human_description:
+      en_US: "The mailbox folder containing the emails"
+      zh_Hans: "包含邮件的邮箱文件夹"
+      pt_BR: "The mailbox folder containing the emails"
+      ja_JP: "メールを含むメールボックスフォルダ"
+    llm_description: "The mailbox folder containing the emails to mark. Default is INBOX."
+    form: llm
+  - name: email_ids
+    type: string
+    required: true
+    label:
+      en_US: "Email IDs"
+      zh_Hans: "邮件 ID"
+      pt_BR: "Email IDs"
+      ja_JP: "メール ID"
+    human_description:
+      en_US: "Comma-separated email IDs from search results"
+      zh_Hans: "搜索结果中的邮件 ID，多个用逗号分隔"
+      pt_BR: "Comma-separated email IDs from search results"
+      ja_JP: "検索結果からのメール ID（カンマ区切り）"
+    llm_description: "Comma-separated email IDs from search_email results, e.g. '1,2,3'"
+    form: llm
+  - name: mark_as
+    type: select
+    required: true
+    default: "read"
+    options:
+      - value: "read"
+        label:
+          en_US: "Read"
+          zh_Hans: "已读"
+      - value: "unread"
+        label:
+          en_US: "Unread"
+          zh_Hans: "未读"
+    label:
+      en_US: "Mark As"
+      zh_Hans: "标记为"
+      pt_BR: "Mark As"
+      ja_JP: "マーク"
+    human_description:
+      en_US: "Mark emails as read or unread"
+      zh_Hans: "将邮件标记为已读或未读"
+      pt_BR: "Mark emails as read or unread"
+      ja_JP: "メールを既読または未読としてマーク"
+    llm_description: "Mark emails as 'read' or 'unread'"
+    form: llm
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      description: "Operation status: success or error"
+    message:
+      type: string
+      description: "Result message"
+    marked_as:
+      type: string
+      description: "The flag that was applied (read/unread)"
+    folder:
+      type: string
+      description: "The folder where emails were marked"
+    success_count:
+      type: integer
+      description: "Number of emails successfully marked"
+    failed_ids:
+      type: array
+      items:
+        type: string
+      description: "List of email IDs that failed to mark"
+extra:
+  python:
+    source: tools/mark_email.py

@@ -1,0 +1,188 @@
+identity:
+  name: "send_email"
+  author: "liux297"
+  label:
+    en_US: "Send Email"
+    zh_Hans: "发送邮件"
+    pt_BR: "Send Email"
+    ja_JP: "メール送信"
+description:
+  human:
+    en_US: "Send an email via configured SMTP server with HTML, CC/BCC, and attachment support"
+    zh_Hans: "通过配置的 SMTP 服务器发送邮件，支持 HTML、抄送/密送和附件"
+    pt_BR: "Send an email via configured SMTP server with HTML, CC/BCC, and attachment support"
+    ja_JP: "設定された SMTP サーバー経由でメールを送信（HTML、CC/BCC、添付ファイル対応）"
+  llm: "Send an email to one or more recipients with optional CC, BCC, HTML body, and attachments."
+parameters:
+  - name: to_email
+    type: string
+    required: true
+    label:
+      en_US: "Recipient Email(s)"
+      zh_Hans: "收件人邮箱"
+      pt_BR: "Recipient Email(s)"
+      ja_JP: "受信者メールアドレス"
+    human_description:
+      en_US: "Recipient email address(es), separate multiple with comma"
+      zh_Hans: "收件人邮箱地址，多个用逗号分隔"
+      pt_BR: "Recipient email address(es), separate multiple with comma"
+      ja_JP: "受信者のメールアドレス（複数の場合はカンマで区切る）"
+    llm_description: "The email address(es) of the recipient. For multiple recipients, separate with commas, e.g. user1@example.com,user2@example.com"
+    form: llm
+  - name: cc_email
+    type: string
+    required: false
+    label:
+      en_US: "CC Email(s)"
+      zh_Hans: "抄送邮箱"
+      pt_BR: "CC Email(s)"
+      ja_JP: "CC メールアドレス"
+    human_description:
+      en_US: "CC recipient email address(es), separate multiple with comma"
+      zh_Hans: "抄送收件人邮箱地址，多个用逗号分隔"
+      pt_BR: "CC recipient email address(es), separate multiple with comma"
+      ja_JP: "CC 受信者のメールアドレス（複数の場合はカンマで区切る）"
+    llm_description: "Optional CC email addresses, separate multiple with commas"
+    form: llm
+  - name: bcc_email
+    type: string
+    required: false
+    label:
+      en_US: "BCC Email(s)"
+      zh_Hans: "密送邮箱"
+      pt_BR: "BCC Email(s)"
+      ja_JP: "BCC メールアドレス"
+    human_description:
+      en_US: "BCC recipient email address(es), separate multiple with comma"
+      zh_Hans: "密送收件人邮箱地址，多个用逗号分隔"
+      pt_BR: "BCC recipient email address(es), separate multiple with comma"
+      ja_JP: "BCC 受信者のメールアドレス（複数の場合はカンマで区切る）"
+    llm_description: "Optional BCC email addresses, separate multiple with commas"
+    form: llm
+  - name: subject
+    type: string
+    required: true
+    label:
+      en_US: "Subject"
+      zh_Hans: "邮件主题"
+      pt_BR: "Subject"
+      ja_JP: "件名"
+    human_description:
+      en_US: "The subject of the email"
+      zh_Hans: "邮件的主题"
+      pt_BR: "The subject of the email"
+      ja_JP: "メールの件名"
+    llm_description: "The subject line of the email"
+    form: llm
+  - name: body
+    type: string
+    required: true
+    label:
+      en_US: "Email Body"
+      zh_Hans: "邮件正文"
+      pt_BR: "Email Body"
+      ja_JP: "メール本文"
+    human_description:
+      en_US: "The body content of the email (plain text or HTML)"
+      zh_Hans: "邮件的正文内容（纯文本或 HTML）"
+      pt_BR: "The body content of the email (plain text or HTML)"
+      ja_JP: "メールの本文内容（プレーンテキストまたは HTML）"
+    llm_description: "The main content of the email body. Can be plain text or HTML depending on body_type."
+    form: llm
+  - name: body_type
+    type: select
+    required: false
+    default: "plain"
+    options:
+      - value: "plain"
+        label:
+          en_US: "Plain Text"
+          zh_Hans: "纯文本"
+      - value: "html"
+        label:
+          en_US: "HTML"
+          zh_Hans: "HTML"
+    label:
+      en_US: "Body Type"
+      zh_Hans: "正文格式"
+      pt_BR: "Body Type"
+      ja_JP: "本文形式"
+    human_description:
+      en_US: "The format of the email body"
+      zh_Hans: "邮件正文的格式"
+      pt_BR: "The format of the email body"
+      ja_JP: "メール本文の形式"
+    llm_description: "The format of the email body: 'plain' for plain text (default) or 'html' for HTML content"
+    form: llm
+  - name: sender_name
+    type: string
+    required: false
+    label:
+      en_US: "Sender Name"
+      zh_Hans: "发件人名称"
+      pt_BR: "Sender Name"
+      ja_JP: "送信者名"
+    human_description:
+      en_US: "Display name for the sender (optional)"
+      zh_Hans: "发件人显示名称（可选）"
+      pt_BR: "Display name for the sender (optional)"
+      ja_JP: "送信者の表示名（オプション）"
+    llm_description: "Optional display name for the sender, e.g. 'John Doe'"
+    form: llm
+  - name: attachments
+    type: string
+    required: false
+    label:
+      en_US: "Attachments"
+      zh_Hans: "附件"
+      pt_BR: "Attachments"
+      ja_JP: "添付ファイル"
+    human_description:
+      en_US: 'JSON array of attachments: [{"filename": "file.txt", "content_base64": "..."}]'
+      zh_Hans: '附件 JSON 数组：[{"filename": "file.txt", "content_base64": "..."}]'
+      pt_BR: 'JSON array of attachments: [{"filename": "file.txt", "content_base64": "..."}]'
+      ja_JP: '添付ファイルの JSON 配列：[{"filename": "file.txt", "content_base64": "..."}]'
+    llm_description: 'Optional attachments as JSON array. Each item has "filename" and "content_base64" (base64 encoded file content). Example: [{"filename": "report.pdf", "content_base64": "JVBERi0xLjQK..."}]'
+    form: llm
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      description: "Send status: success or error"
+    message:
+      type: string
+      description: "Result message"
+    from:
+      type: string
+      description: "Sender email address"
+    to:
+      type: array
+      items:
+        type: string
+      description: "Recipient email addresses"
+    cc:
+      type: array
+      items:
+        type: string
+      description: "CC email addresses"
+    bcc:
+      type: array
+      items:
+        type: string
+      description: "BCC email addresses"
+    subject:
+      type: string
+      description: "Email subject"
+    attachments_count:
+      type: integer
+      description: "Number of attachments sent"
+    timestamp:
+      type: string
+      description: "Send timestamp (ISO 8601 format)"
+    error_type:
+      type: string
+      description: "Error type if failed: connection_timeout, auth_failed, invalid_address, invalid_parameter, unknown"
+extra:
+  python:
+    source: tools/send_email.py

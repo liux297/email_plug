@@ -1,0 +1,241 @@
+identity:
+  name: "search_email"
+  author: "liux297"
+  label:
+    en_US: "Search Email"
+    zh_Hans: "检索邮件"
+    pt_BR: "Search Email"
+    ja_JP: "メール検索"
+description:
+  human:
+    en_US: "Search and retrieve emails with advanced filtering by sender, subject, body, date range, and read status"
+    zh_Hans: "通过发件人、主题、正文、时间范围和读取状态高级筛选检索邮件"
+    pt_BR: "Search and retrieve emails with advanced filtering by sender, subject, body, date range, and read status"
+    ja_JP: "送信者、件名、本文、日付範囲、既読状態でメールを検索・取得"
+  llm: "Search emails in the configured mailbox by folder, sender, subject, body keyword, date range, or unread status. Returns matching emails with details."
+parameters:
+  - name: folder
+    type: string
+    required: false
+    default: "INBOX"
+    label:
+      en_US: "Mail Folder"
+      zh_Hans: "邮件文件夹"
+      pt_BR: "Mail Folder"
+      ja_JP: "メールフォルダ"
+    human_description:
+      en_US: "The mailbox folder to search (e.g. INBOX, Sent, Drafts)"
+      zh_Hans: "要搜索的邮箱文件夹（如 INBOX、Sent、Drafts）"
+      pt_BR: "The mailbox folder to search (e.g. INBOX, Sent, Drafts)"
+      ja_JP: "検索するメールフォルダ（INBOX、Sent、Drafts など）"
+    llm_description: "The mailbox folder to search. Default is INBOX. Common folders: INBOX, Sent, Drafts, Trash, Archive."
+    form: llm
+  - name: sender
+    type: string
+    required: false
+    label:
+      en_US: "Sender"
+      zh_Hans: "发件人"
+      pt_BR: "Sender"
+      ja_JP: "送信者"
+    human_description:
+      en_US: "Filter by sender email address or name (supports partial match)"
+      zh_Hans: "按发件人邮箱地址或名称筛选（支持部分匹配）"
+      pt_BR: "Filter by sender email address or name (supports partial match)"
+      ja_JP: "送信者のメールアドレスまたは名前でフィルタ（部分一致対応）"
+    llm_description: "Filter emails by sender email address or name. Supports partial matching, e.g. 'john' matches 'john@example.com'"
+    form: llm
+  - name: subject
+    type: string
+    required: false
+    label:
+      en_US: "Subject Keyword"
+      zh_Hans: "主题关键词"
+      pt_BR: "Subject Keyword"
+      ja_JP: "件名キーワード"
+    human_description:
+      en_US: "Search keyword in email subject"
+      zh_Hans: "邮件主题中的搜索关键词"
+      pt_BR: "Search keyword in email subject"
+      ja_JP: "メール件名の検索キーワード"
+    llm_description: "Keyword to search in email subject lines. Supports Chinese and other non-ASCII characters."
+    form: llm
+  - name: body_keyword
+    type: string
+    required: false
+    label:
+      en_US: "Body Keyword"
+      zh_Hans: "正文关键词"
+      pt_BR: "Body Keyword"
+      ja_JP: "本文キーワード"
+    human_description:
+      en_US: "Search keyword in email body content"
+      zh_Hans: "邮件正文中的搜索关键词"
+      pt_BR: "Search keyword in email body content"
+      ja_JP: "メール本文の検索キーワード"
+    llm_description: "Keyword to search in email body content. Note: This may be slower as it requires fetching full email content."
+    form: llm
+  - name: start_date
+    type: string
+    required: false
+    label:
+      en_US: "Start Date"
+      zh_Hans: "开始日期"
+      pt_BR: "Start Date"
+      ja_JP: "開始日"
+    human_description:
+      en_US: "Search emails from this date (format: YYYY-MM-DD)"
+      zh_Hans: "从此日期开始搜索邮件（格式：YYYY-MM-DD）"
+      pt_BR: "Search emails from this date (format: YYYY-MM-DD)"
+      ja_JP: "この日付からメールを検索（形式：YYYY-MM-DD）"
+    llm_description: "Start date for email search in YYYY-MM-DD format, e.g. '2024-01-01'"
+    form: llm
+  - name: end_date
+    type: string
+    required: false
+    label:
+      en_US: "End Date"
+      zh_Hans: "结束日期"
+      pt_BR: "End Date"
+      ja_JP: "終了日"
+    human_description:
+      en_US: "Search emails until this date (format: YYYY-MM-DD)"
+      zh_Hans: "搜索到此日期为止的邮件（格式：YYYY-MM-DD）"
+      pt_BR: "Search emails until this date (format: YYYY-MM-DD)"
+      ja_JP: "この日付までのメールを検索（形式：YYYY-MM-DD）"
+    llm_description: "End date for email search in YYYY-MM-DD format, e.g. '2024-12-31'"
+    form: llm
+  - name: days
+    type: number
+    required: false
+    default: 0
+    label:
+      en_US: "Recent Days"
+      zh_Hans: "最近天数"
+      pt_BR: "Recent Days"
+      ja_JP: "過去日数"
+    human_description:
+      en_US: "Search emails within the last N days. 0 means no date filter. Ignored if start_date is set."
+      zh_Hans: "检索最近 N 天内的邮件，0 表示不限时间。如果设置了开始日期则忽略此参数。"
+      pt_BR: "Search emails within the last N days. 0 means no date filter. Ignored if start_date is set."
+      ja_JP: "過去N日以内のメールを検索。0は日付フィルタなし。開始日が設定されている場合は無視されます。"
+    llm_description: "Filter emails within the last N days from today. Set to 0 or leave empty to skip. Ignored if start_date is provided."
+    form: llm
+  - name: unread_only
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: "Unread Only"
+      zh_Hans: "仅未读"
+      pt_BR: "Unread Only"
+      ja_JP: "未読のみ"
+    human_description:
+      en_US: "Only return unread emails"
+      zh_Hans: "仅返回未读邮件"
+      pt_BR: "Only return unread emails"
+      ja_JP: "未読のメールのみ返す"
+    llm_description: "Set to true to only return unread emails"
+    form: llm
+  - name: max_results
+    type: number
+    required: false
+    default: 10
+    label:
+      en_US: "Max Results"
+      zh_Hans: "最大结果数"
+      pt_BR: "Max Results"
+      ja_JP: "最大結果数"
+    human_description:
+      en_US: "Maximum number of emails to return"
+      zh_Hans: "返回的最大邮件数量"
+      pt_BR: "Maximum number of emails to return"
+      ja_JP: "返すメールの最大数"
+    llm_description: "Maximum number of email results to return, default is 10"
+    form: llm
+  - name: include_body
+    type: boolean
+    required: false
+    default: true
+    label:
+      en_US: "Include Body"
+      zh_Hans: "包含正文"
+      pt_BR: "Include Body"
+      ja_JP: "本文を含む"
+    human_description:
+      en_US: "Include full email body in results"
+      zh_Hans: "在结果中包含完整邮件正文"
+      pt_BR: "Include full email body in results"
+      ja_JP: "結果にメール本文全体を含める"
+    llm_description: "Set to true to include full email body content in results (default). Set to false for faster search with only previews."
+    form: llm
+  - name: include_attachments
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: "Include Attachments"
+      zh_Hans: "包含附件"
+      pt_BR: "Include Attachments"
+      ja_JP: "添付ファイルを含む"
+    human_description:
+      en_US: "Include attachment data (base64) in results"
+      zh_Hans: "在结果中包含附件数据（base64）"
+      pt_BR: "Include attachment data (base64) in results"
+      ja_JP: "結果に添付ファイルデータ（base64）を含める"
+    llm_description: "Set to true to include attachment metadata and base64 content (limited to 10KB per file). May increase response size significantly."
+    form: llm
+output_schema:
+  type: object
+  properties:
+    total_found:
+      type: integer
+      description: "Total number of emails found"
+    folder:
+      type: string
+      description: "The folder that was searched"
+    emails:
+      type: array
+      description: "List of matching emails"
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            description: "Email ID (can be used with mark_email and delete_email tools)"
+          from:
+            type: string
+            description: "Sender email address and name"
+          to:
+            type: string
+            description: "Recipient email address(es)"
+          subject:
+            type: string
+            description: "Email subject"
+          date:
+            type: string
+            description: "Email date"
+          body:
+            type: string
+            description: "Full email body content (if include_body is true)"
+          body_preview:
+            type: string
+            description: "First 500 characters of email body"
+          attachments:
+            type: array
+            description: "List of attachments (if include_attachments is true)"
+            items:
+              type: object
+              properties:
+                filename:
+                  type: string
+                content_type:
+                  type: string
+                size:
+                  type: integer
+    error:
+      type: string
+      description: "Error message if search failed"
+extra:
+  python:
+    source: tools/search_email.py

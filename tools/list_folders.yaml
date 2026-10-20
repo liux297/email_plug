@@ -1,0 +1,36 @@
+identity:
+  name: "list_folders"
+  author: "liux297"
+  label:
+    en_US: "List Folders"
+    zh_Hans: "列出文件夹"
+    pt_BR: "List Folders"
+    ja_JP: "フォルダ一覧"
+description:
+  human:
+    en_US: "List all available mail folders"
+    zh_Hans: "列出所有可用的邮件文件夹"
+    pt_BR: "List all available mail folders"
+    ja_JP: "利用可能なすべてのメールフォルダを一覧表示"
+  llm: "List all available mail folders in the mailbox. Useful for discovering folder names to use with search_email, mark_email, move_email, etc."
+parameters: []
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      description: "Operation status: success or error"
+    total_folders:
+      type: integer
+      description: "Total number of folders"
+    folders:
+      type: array
+      items:
+        type: string
+      description: "List of folder names"
+    message:
+      type: string
+      description: "Error message if failed"
+extra:
+  python:
+    source: tools/list_folders.py
