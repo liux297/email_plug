@@ -77,6 +77,22 @@ parameters:
       ja_JP: "ダウンロードする添付ファイルの最大サイズ（MB）"
     llm_description: "Maximum attachment size to download in MB. Default is 10MB. Larger attachments will be rejected."
     form: llm
+  - name: attachment_format
+    type: string
+    required: false
+    default: "base64"
+    label:
+      en_US: "Attachment Format"
+      zh_Hans: "附件格式"
+      pt_BR: "Attachment Format"
+      ja_JP: "添付ファイル形式"
+    human_description:
+      en_US: "Format for attachment content: 'base64' (inline base64 data) or 'url' (upload to Dify file service and return URL)"
+      zh_Hans: "附件内容格式：'base64'（内联 base64 数据）或 'url'（上传到 Dify 文件服务并返回 URL）"
+      pt_BR: "Format for attachment content: 'base64' (inline base64 data) or 'url' (upload to Dify file service and return URL)"
+      ja_JP: "添付ファイル内容の形式：'base64'（インライン base64 データ）または 'url'（Dify ファイルサービスにアップロードして URL を返す）"
+    llm_description: "Format for attachment content. Options: 'base64' returns inline base64-encoded content; 'url' uploads to Dify file service and returns upload_file_id and preview_url. Default is 'base64'."
+    form: llm
 output_schema:
   type: object
   properties:
@@ -112,7 +128,16 @@ output_schema:
       description: "Human readable size"
     content_base64:
       type: string
-      description: "Base64 encoded attachment content"
+      description: "Base64 encoded attachment content (when format is base64)"
+    upload_file_id:
+      type: string
+      description: "Dify file service upload ID (when format is url)"
+    url:
+      type: string
+      description: "Preview URL from Dify file service (when format is url)"
+    format:
+      type: string
+      description: "Attachment format: 'base64' or 'url'"
     attachments:
       type: array
       description: "List of attachments (when attachment_index is -1)"

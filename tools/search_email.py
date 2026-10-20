@@ -7,6 +7,7 @@ import ssl
 from collections.abc import Generator
 from datetime import datetime, timedelta
 from email.header import decode_header
+from email.utils import parsedate_to_datetime
 from html import unescape
 from typing import Any
 
@@ -83,6 +84,7 @@ class SearchEmailTool(Tool):
         max_results = int(tool_parameters.get("max_results", 10) or 10)
         include_body = tool_parameters.get("include_body", True)
         include_attachments = tool_parameters.get("include_attachments", False)
+        attachment_format = tool_parameters.get("attachment_format", "base64") or "base64"
 
         logger.info(f"IMAP: {imap_host}:{imap_port} ({imap_encrypt})")
         logger.info(f"Folder: {folder}, Sender: '{sender}', Subject: '{subject}'")
@@ -193,6 +195,7 @@ class SearchEmailTool(Tool):
 
                         from_value = decode_header_value(msg.get("From", ""))
                         subject_value = decode_header_value(msg.get("Subject", ""))
+                        date_value = msg.get("Date", "")
 
                         match = True
                         if sender and sender.lower() not in from_value.lower():
@@ -201,44 +204,18 @@ class SearchEmailTool(Tool):
                             match = False
                         if body_needs_client_filter and body_keyword.lower() not in body_text.lower():
                             match = False
-
-                        if match:
-                            matched_ids.append(eid)
-                            logger.info(f"  Match: {subject_value} (from: {from_value})")
-
-                    email_ids = matched_ids
-                else:
-                    email_ids = list(email_ids[-max_results:])id in reversed(candidates):
-                        if len(matched_ids) >= max_results:
-                            break
-
-                        fetch_fields = "(BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])"
-                        if body_needs_client_filter:
-                            fetch_fields = "(BODY.PEEK[])"
-
-                        status, msg_data = mail.fetch(eid, fetch_fields)
-                        if status != "OK":
-                            continue
-
-                        if body_needs_client_filter:
-                            raw_email = msg_data[0][1]
-                            msg = email.message_from_bytes(raw_email)
-                            body_text = self._extract_body(msg)
-                        else:
-                            header_data = msg_data[0][1]
-                            msg = email.message_from_bytes(header_data)
-                            body_text = ""
-
-                        from_value = decode_header_value(msg.get("From", ""))
-                        subject_value = decode_header_value(msg.get("Subject", ""))
-
-                        match = True
-                        if sender and sender.lower() not in from_value.lower():
-                            match = False
-                        if subject_needs_client_filter and subject.lower() not in subject_value.lower():
-                            match = False
-                        if body_needs_client_filter and body_keyword.lower() not in body_text.lower():
-                            match = False
+                        
+                        if (start_dt or end_dt) and date_value:
+                            try:
+                                from email.utils import parsedate_to_datetime
+                                email_dt = parsedate_to_datetime(date_value)
+                                email_dt = email_dt.replace(tzinfo=None)
+                                if start_dt and email_dt < start_dt:
+                                    match = False
+                                if end_dt and email_dt > end_dt + timedelta(days=1):
+                                    match = False
+                            except Exception as e:
+                                logger.warning(f"Failed to parse date '{date_value}': {e}")
 
                         if match:
                             matched_ids.append(eid)
@@ -320,7 +297,33 @@ class SearchEmailTool(Tool):
 
                 if attachments_list:
                     if include_attachments:
-                        email_data["attachments"] = attachments_list
+                        processed = []
+                        for att in attachments_list:
+                            att_info = {
+                                "filename": att["filename"],
+                                "content_type": att["content_type"],
+                                "size": att["size"]
+                            }
+                            if attachment_format == "url":
+                                try:
+                                    upload_resp = self.session.file.upload(
+                                        filename=att["filename"],
+                                        content=att["_raw"],
+                                        mimetype=att["content_type"]
+                                    )
+                                    att_info["upload_file_id"] = upload_resp.id
+                                    att_info["url"] = upload_resp.preview_url or ""
+                                    att_info["format"] = "url"
+                                    logger.info(f"  Uploaded attachment '{att['filename']}' -> {upload_resp.id}")
+                                except Exception as e:
+                                    logger.warning(f"  Failed to upload attachment '{att['filename']}': {e}")
+                                    att_info["content_base64"] = att["content_base64"]
+                                    att_info["format"] = "base64"
+                            else:
+                                att_info["content_base64"] = att["content_base64"]
+                                att_info["format"] = "base64"
+                            processed.append(att_info)
+                        email_data["attachments"] = processed
                     else:
                         email_data["attachments"] = [
                             {"filename": a["filename"], "content_type": a["content_type"], "size": a["size"]}
@@ -420,7 +423,8 @@ class SearchEmailTool(Tool):
                             "filename": filename_decoded,
                             "content_type": content_type,
                             "size": len(payload),
-                            "content_base64": base64.b64encode(payload).decode('utf-8')
+                            "content_base64": base64.b64encode(payload).decode('utf-8'),
+                            "_raw": payload
                         })
                     continue
 

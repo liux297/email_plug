@@ -179,11 +179,27 @@ parameters:
       pt_BR: "Include Attachments"
       ja_JP: "添付ファイルを含む"
     human_description:
-      en_US: "Include attachment data (base64) in results"
-      zh_Hans: "在结果中包含附件数据（base64）"
-      pt_BR: "Include attachment data (base64) in results"
-      ja_JP: "結果に添付ファイルデータ（base64）を含める"
-    llm_description: "Set to true to include attachment metadata and base64 content. Note: For large attachments, use get_attachment tool instead."
+      en_US: "Include attachment data in results"
+      zh_Hans: "在结果中包含附件数据"
+      pt_BR: "Include attachment data in results"
+      ja_JP: "結果に添付ファイルデータを含める"
+    llm_description: "Set to true to include attachment metadata in results. Use attachment_format to choose between base64 content or Dify file URL."
+    form: llm
+  - name: attachment_format
+    type: string
+    required: false
+    default: "base64"
+    label:
+      en_US: "Attachment Format"
+      zh_Hans: "附件格式"
+      pt_BR: "Attachment Format"
+      ja_JP: "添付ファイル形式"
+    human_description:
+      en_US: "Format for attachment content: 'base64' (inline base64 data) or 'url' (upload to Dify file service and return URL)"
+      zh_Hans: "附件内容格式：'base64'（内联 base64 数据）或 'url'（上传到 Dify 文件服务并返回 URL）"
+      pt_BR: "Format for attachment content: 'base64' (inline base64 data) or 'url' (upload to Dify file service and return URL)"
+      ja_JP: "添付ファイル内容の形式：'base64'（インライン base64 データ）または 'url'（Dify ファイルサービスにアップロードして URL を返す）"
+    llm_description: "Format for attachment content when include_attachments is true. Options: 'base64' returns inline base64-encoded content; 'url' uploads to Dify file service and returns upload_file_id and preview_url. Default is 'base64'."
     form: llm
 output_schema:
   type: object
@@ -233,6 +249,18 @@ output_schema:
                   type: string
                 size:
                   type: integer
+                format:
+                  type: string
+                  description: "'base64' or 'url'"
+                content_base64:
+                  type: string
+                  description: "Base64 content (when format is base64)"
+                upload_file_id:
+                  type: string
+                  description: "Dify file ID (when format is url)"
+                url:
+                  type: string
+                  description: "Preview URL (when format is url)"
     error:
       type: string
       description: "Error message if search failed"

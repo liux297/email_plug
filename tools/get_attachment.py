@@ -44,6 +44,7 @@ class GetAttachmentTool(Tool):
         email_id = tool_parameters.get("email_id", "").strip()
         attachment_index = int(tool_parameters.get("attachment_index", 0) or 0)
         max_size_mb = int(tool_parameters.get("max_size_mb", 10) or 10)
+        attachment_format = tool_parameters.get("attachment_format", "base64") or "base64"
 
         if not email_id:
             yield self.create_json_message({
@@ -153,11 +154,7 @@ class GetAttachmentTool(Tool):
                 })
                 return
 
-            content_base64 = base64.b64encode(att["content"]).decode('utf-8')
-
-            logger.info(f"Returning attachment: {att['filename']} ({self._format_size(att['size'])})")
-
-            yield self.create_json_message({
+            result = {
                 "status": "success",
                 "email_id": email_id,
                 "email_subject": subject,
@@ -166,9 +163,31 @@ class GetAttachmentTool(Tool):
                 "filename": att["filename"],
                 "content_type": att["content_type"],
                 "size": att["size"],
-                "size_human": self._format_size(att["size"]),
-                "content_base64": content_base64
-            })
+                "size_human": self._format_size(att["size"])
+            }
+
+            if attachment_format == "url":
+                try:
+                    upload_resp = self.session.file.upload(
+                        filename=att["filename"],
+                        content=att["content"],
+                        mimetype=att["content_type"]
+                    )
+                    result["upload_file_id"] = upload_resp.id
+                    result["url"] = upload_resp.preview_url or ""
+                    result["format"] = "url"
+                    logger.info(f"Uploaded attachment '{att['filename']}' -> {upload_resp.id}")
+                except Exception as e:
+                    logger.warning(f"Failed to upload attachment '{att['filename']}': {e}, falling back to base64")
+                    result["content_base64"] = base64.b64encode(att["content"]).decode('utf-8')
+                    result["format"] = "base64"
+            else:
+                result["content_base64"] = base64.b64encode(att["content"]).decode('utf-8')
+                result["format"] = "base64"
+
+            logger.info(f"Returning attachment: {att['filename']} ({self._format_size(att['size'])})")
+
+            yield self.create_json_message(result)
 
         except Exception as e:
             logger.error(f"Get attachment failed: {e}")
