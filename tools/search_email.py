@@ -134,6 +134,10 @@ class SearchEmailTool(Tool):
             if unread_only:
                 criteria.append('UNSEEN')
 
+            if has_reply_filter:
+                criteria.append('ANSWERED')
+                logger.info("Reply filter: only answered emails")
+
             start_dt = parse_date(start_date)
             end_dt = parse_date(end_date)
 
@@ -285,16 +289,8 @@ class SearchEmailTool(Tool):
                 if include_body or include_attachments:
                     body, attachments_list = self._extract_content(msg, include_attachments)
 
-                has_replies = False
-                if has_reply_filter:
-                    has_replies = "\\Answered" in flags_str
-                    logger.info(f"Email {eid} flags: {flags_str}, has_replies from flags: {has_replies}")
-                    
-                    if not has_replies:
-                        has_replies = self._check_email_has_reply(mail, message_id, folder)
-                    
-                    if not has_replies:
-                        continue
+                has_replies = "\\Answered" in flags_str
+                logger.debug(f"Email {eid} flags: {flags_str}, has_replies: {has_replies}")
 
                 email_data = {
                     "id": eid.decode() if isinstance(eid, bytes) else str(eid),
