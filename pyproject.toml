@@ -1,6 +1,6 @@
 [project]
 name = "email_plug"
-version = "0.0.3"
+version = "0.0.4"
 description = "Dify plugin for email operations"
 requires-python = ">=3.11"
 dependencies = [

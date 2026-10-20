@@ -3,7 +3,7 @@
 **Author:** liux297
 **Contact:** 297218348@qq.com
 **Repository:** https://github.com/liux297/email_plug
-**Version:** 0.0.3
+**Version:** 0.0.4
 **Type:** tool
 
 ### Description

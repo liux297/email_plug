@@ -157,7 +157,7 @@ class SearchEmailTool(Tool):
                 email_ids = messages[0].split() if messages[0] else []
                 logger.info(f"IMAP server returned {len(email_ids)} results")
 
-                if subject_needs_client_filter or body_needs_client_filter or (len(email_ids) < 3 and not days and not start_dt):
+                if subject_needs_client_filter or body_needs_client_filter or len(email_ids) < max_results:
                     logger.info("Applying client-side filtering...")
                     if email_ids:
                         candidates = email_ids
@@ -171,6 +171,44 @@ class SearchEmailTool(Tool):
 
                     matched_ids = []
                     for eid in reversed(candidates):
+                        if len(matched_ids) >= max_results:
+                            break
+
+                        fetch_fields = "(BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])"
+                        if body_needs_client_filter:
+                            fetch_fields = "(BODY.PEEK[])"
+
+                        status, msg_data = mail.fetch(eid, fetch_fields)
+                        if status != "OK":
+                            continue
+
+                        if body_needs_client_filter:
+                            raw_email = msg_data[0][1]
+                            msg = email.message_from_bytes(raw_email)
+                            body_text = self._extract_body(msg)
+                        else:
+                            header_data = msg_data[0][1]
+                            msg = email.message_from_bytes(header_data)
+                            body_text = ""
+
+                        from_value = decode_header_value(msg.get("From", ""))
+                        subject_value = decode_header_value(msg.get("Subject", ""))
+
+                        match = True
+                        if sender and sender.lower() not in from_value.lower():
+                            match = False
+                        if subject_needs_client_filter and subject.lower() not in subject_value.lower():
+                            match = False
+                        if body_needs_client_filter and body_keyword.lower() not in body_text.lower():
+                            match = False
+
+                        if match:
+                            matched_ids.append(eid)
+                            logger.info(f"  Match: {subject_value} (from: {from_value})")
+
+                    email_ids = matched_ids
+                else:
+                    email_ids = list(email_ids[-max_results:])id in reversed(candidates):
                         if len(matched_ids) >= max_results:
                             break
 
@@ -273,14 +311,21 @@ class SearchEmailTool(Tool):
                     "to": to_decoded,
                     "subject": subject_decoded,
                     "date": date_str,
-                    "body_preview": body[:500] if body else ""
+                    "body_preview": body[:500] if body else "",
+                    "has_attachments": len(attachments_list) > 0
                 }
 
                 if include_body:
                     email_data["body"] = body
 
-                if include_attachments and attachments_list:
-                    email_data["attachments"] = attachments_list
+                if attachments_list:
+                    if include_attachments:
+                        email_data["attachments"] = attachments_list
+                    else:
+                        email_data["attachments"] = [
+                            {"filename": a["filename"], "content_type": a["content_type"], "size": a["size"]}
+                            for a in attachments_list
+                        ]
 
                 results.append(email_data)
                 logger.info(f"  Result: {subject_decoded} (from: {from_decoded})")
