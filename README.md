@@ -3,16 +3,17 @@
 **Author:** liux297
 **Contact:** 297218348@qq.com
 **Repository:** https://github.com/liux297/email_plug
-**Version:** 0.0.4
+**Version:** 0.0.7
 **Type:** tool
 
 ### Description
 
-A complete Dify plugin for email operations via SMTP/IMAP protocols. It includes seven tools:
+A complete Dify plugin for email operations via SMTP/IMAP protocols. It includes nine tools:
 
 - **Send Email**: Send emails with HTML support, CC/BCC, attachments, and multiple recipients
-- **Search Email**: Advanced search by sender, subject, body keyword, date range, and read status
-- **Get Attachment**: Download attachments from emails or list all attachments
+- **Search Email**: Advanced search by sender, subject, body keyword, date range, read status, and reply status
+- **Get Attachment**: Download attachments from emails or list all attachments, with Dify file service integration
+- **Check Reply**: Check if a specific email has been replied to
 - **Mark Email**: Mark emails as read or unread
 - **Delete Email**: Delete emails (move to trash or permanent delete)
 - **Move Email**: Move emails between folders

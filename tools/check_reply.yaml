@@ -1,0 +1,149 @@
+identity:
+  name: "check_reply"
+  author: "liux297"
+  label:
+    en_US: "Check Reply"
+    zh_Hans: "检查回复"
+    pt_BR: "Check Reply"
+    ja_JP: "返信チェック"
+description:
+  human:
+    en_US: "Check if an email has been replied to"
+    zh_Hans: "检查邮件是否被回复"
+    pt_BR: "Check if an email has been replied to"
+    ja_JP: "メールに返信があったか確認"
+  llm: "Check if a specific email has received any replies by searching for emails with matching In-Reply-To or References headers. Can search in current folder and optionally in Sent folder."
+parameters:
+  - name: folder
+    type: string
+    required: false
+    default: "INBOX"
+    label:
+      en_US: "Mail Folder"
+      zh_Hans: "邮件文件夹"
+      pt_BR: "Mail Folder"
+      ja_JP: "メールフォルダ"
+    human_description:
+      en_US: "The mailbox folder containing the original email"
+      zh_Hans: "包含原始邮件的邮箱文件夹"
+      pt_BR: "The mailbox folder containing the original email"
+      ja_JP: "元のメールを含むメールボックスフォルダ"
+    llm_description: "The mailbox folder containing the original email. Default is INBOX."
+    form: llm
+  - name: email_id
+    type: string
+    required: true
+    label:
+      en_US: "Email ID"
+      zh_Hans: "邮件 ID"
+      pt_BR: "Email ID"
+      ja_JP: "メール ID"
+    human_description:
+      en_US: "The email ID to check for replies"
+      zh_Hans: "要检查回复的邮件 ID"
+      pt_BR: "The email ID to check for replies"
+      ja_JP: "返信を確認するメール ID"
+    llm_description: "The email ID from search_email results to check if it has been replied to"
+    form: llm
+  - name: check_sent_folder
+    type: boolean
+    required: false
+    default: true
+    label:
+      en_US: "Check Sent Folder"
+      zh_Hans: "检查已发送文件夹"
+      pt_BR: "Check Sent Folder"
+      ja_JP: "送信済みフォルダを確認"
+    human_description:
+      en_US: "Also check the Sent folder for replies you sent"
+      zh_Hans: "同时检查已发送文件夹中你发出的回复"
+      pt_BR: "Also check the Sent folder for replies you sent"
+      ja_JP: "送信済みフォルダからも送信した返信を確認"
+    llm_description: "Set to true to also search the Sent folder for replies. Default is true."
+    form: llm
+  - name: sent_folder
+    type: string
+    required: false
+    default: "Sent"
+    label:
+      en_US: "Sent Folder Name"
+      zh_Hans: "已发送文件夹名称"
+      pt_BR: "Sent Folder Name"
+      ja_JP: "送信済みフォルダ名"
+    human_description:
+      en_US: "Name of the Sent folder (varies by email provider)"
+      zh_Hans: "已发送文件夹的名称（不同邮件提供商名称不同）"
+      pt_BR: "Name of the Sent folder (varies by email provider)"
+      ja_JP: "送信済みフォルダの名前（メールプロバイダにより異なる）"
+    llm_description: "Name of the Sent folder. Common names: Sent, Sent Items, Sent Messages. Default is 'Sent'."
+    form: llm
+  - name: max_results
+    type: number
+    required: false
+    default: 10
+    label:
+      en_US: "Max Results"
+      zh_Hans: "最大结果数"
+      pt_BR: "Max Results"
+      ja_JP: "最大結果数"
+    human_description:
+      en_US: "Maximum number of replies to return"
+      zh_Hans: "返回的最大回复数量"
+      pt_BR: "Maximum number of replies to return"
+      ja_JP: "返す返信の最大数"
+    llm_description: "Maximum number of reply emails to return. Default is 10."
+    form: llm
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      description: "Operation status: success, error, or warning"
+    message:
+      type: string
+      description: "Error or warning message if applicable"
+    email_id:
+      type: string
+      description: "The original email ID"
+    message_id:
+      type: string
+      description: "The Message-ID of the original email"
+    original_subject:
+      type: string
+      description: "Subject of the original email"
+    original_from:
+      type: string
+      description: "Sender of the original email"
+    original_date:
+      type: string
+      description: "Date of the original email"
+    has_replies:
+      type: boolean
+      description: "Whether the email has any replies"
+    reply_count:
+      type: integer
+      description: "Number of replies found"
+    replies:
+      type: array
+      description: "List of reply emails"
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            description: "Reply email ID"
+          from:
+            type: string
+            description: "Sender of the reply"
+          subject:
+            type: string
+            description: "Subject of the reply"
+          date:
+            type: string
+            description: "Date of the reply"
+          folder:
+            type: string
+            description: "Folder where the reply was found"
+extra:
+  python:
+    source: tools/check_reply.py

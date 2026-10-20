@@ -85,11 +85,12 @@ class SearchEmailTool(Tool):
         include_body = tool_parameters.get("include_body", True)
         include_attachments = tool_parameters.get("include_attachments", False)
         attachment_format = tool_parameters.get("attachment_format", "base64") or "base64"
+        has_reply_filter = tool_parameters.get("has_reply", False)
 
         logger.info(f"IMAP: {imap_host}:{imap_port} ({imap_encrypt})")
         logger.info(f"Folder: {folder}, Sender: '{sender}', Subject: '{subject}'")
         logger.info(f"Body keyword: '{body_keyword}', Date range: {start_date} to {end_date}, Days: {days}")
-        logger.info(f"Unread only: {unread_only}, Max results: {max_results}")
+        logger.info(f"Unread only: {unread_only}, Max results: {max_results}, Has reply filter: {has_reply_filter}")
 
         mail = None
         try:
@@ -275,12 +276,19 @@ class SearchEmailTool(Tool):
                 from_decoded = decode_header_value(msg.get("From", ""))
                 to_decoded = decode_header_value(msg.get("To", ""))
                 date_str = msg.get("Date", "")
+                message_id = msg.get("Message-ID", "").strip()
 
                 body = ""
                 attachments_list = []
 
                 if include_body or include_attachments:
                     body, attachments_list = self._extract_content(msg, include_attachments)
+
+                has_replies = False
+                if has_reply_filter or True:
+                    has_replies = self._check_email_has_reply(mail, message_id, folder)
+                    if has_reply_filter and not has_replies:
+                        continue
 
                 email_data = {
                     "id": eid.decode() if isinstance(eid, bytes) else str(eid),
@@ -289,7 +297,8 @@ class SearchEmailTool(Tool):
                     "subject": subject_decoded,
                     "date": date_str,
                     "body_preview": body[:500] if body else "",
-                    "has_attachments": len(attachments_list) > 0
+                    "has_attachments": len(attachments_list) > 0,
+                    "has_replies": has_replies
                 }
 
                 if include_body:
@@ -463,3 +472,56 @@ class SearchEmailTool(Tool):
             body = html_to_plain_text(html_body)
 
         return body, attachments
+
+    def _check_email_has_reply(self, mail: imaplib.IMAP4, message_id: str, folder: str) -> bool:
+        if not message_id:
+            return False
+        
+        try:
+            folders_to_check = [folder]
+            for check_folder in ["Sent", "Sent Items", "Sent Messages", "[Gmail]/Sent Mail"]:
+                if check_folder not in folders_to_check:
+                    folders_to_check.append(check_folder)
+            
+            for check_folder in folders_to_check:
+                try:
+                    status, _ = mail.select(check_folder, readonly=True)
+                    if status != "OK":
+                        continue
+                    
+                    status, all_messages = mail.search(None, 'ALL')
+                    all_ids = all_messages[0].split() if all_messages[0] else []
+                    
+                    scan_limit = min(len(all_ids), 500)
+                    scan_ids = all_ids[-scan_limit:]
+                    
+                    for eid in scan_ids:
+                        try:
+                            status, msg_data = mail.fetch(eid, "(BODY.PEEK[HEADER.FIELDS (IN-REPLY-TO REFERENCES)])")
+                            if status != "OK":
+                                continue
+                            
+                            header_data = msg_data[0][1]
+                            reply_msg = email.message_from_bytes(header_data)
+                            
+                            in_reply_to = reply_msg.get("In-Reply-To", "").strip()
+                            references = reply_msg.get("References", "").strip()
+                            
+                            if (in_reply_to and message_id in in_reply_to) or \
+                               (references and message_id in references):
+                                mail.select(folder, readonly=True)
+                                return True
+                        except Exception:
+                            continue
+                except Exception:
+                    continue
+            
+            mail.select(folder, readonly=True)
+            return False
+        except Exception as e:
+            logger.warning(f"Failed to check reply for message {message_id}: {e}")
+            try:
+                mail.select(folder, readonly=True)
+            except Exception:
+                pass
+            return False
