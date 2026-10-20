@@ -286,14 +286,14 @@ class SearchEmailTool(Tool):
                     body, attachments_list = self._extract_content(msg, include_attachments)
 
                 has_replies = False
-                if has_reply_filter or True:
+                if has_reply_filter:
                     has_replies = "\\Answered" in flags_str
                     logger.info(f"Email {eid} flags: {flags_str}, has_replies from flags: {has_replies}")
                     
                     if not has_replies:
                         has_replies = self._check_email_has_reply(mail, message_id, folder)
                     
-                    if has_reply_filter and not has_replies:
+                    if not has_replies:
                         continue
 
                 email_data = {
