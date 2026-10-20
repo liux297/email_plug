@@ -1,0 +1,134 @@
+identity:
+  name: "get_attachment"
+  author: "liux297"
+  label:
+    en_US: "Get Attachment"
+    zh_Hans: "获取附件"
+    pt_BR: "Get Attachment"
+    ja_JP: "添付ファイル取得"
+description:
+  human:
+    en_US: "Download attachments from an email or list all attachments"
+    zh_Hans: "从邮件下载附件或列出所有附件"
+    pt_BR: "Download attachments from an email or list all attachments"
+    ja_JP: "メールから添付ファイルをダウンロードまたはすべての添付ファイルを一覧表示"
+  llm: "Get attachment content from an email. Set attachment_index to -1 to list all attachments without downloading. Use email IDs from search_email results."
+parameters:
+  - name: folder
+    type: string
+    required: false
+    default: "INBOX"
+    label:
+      en_US: "Mail Folder"
+      zh_Hans: "邮件文件夹"
+      pt_BR: "Mail Folder"
+      ja_JP: "メールフォルダ"
+    human_description:
+      en_US: "The mailbox folder containing the email"
+      zh_Hans: "包含邮件的邮箱文件夹"
+      pt_BR: "The mailbox folder containing the email"
+      ja_JP: "メールを含むメールボックスフォルダ"
+    llm_description: "The mailbox folder containing the email. Default is INBOX."
+    form: llm
+  - name: email_id
+    type: string
+    required: true
+    label:
+      en_US: "Email ID"
+      zh_Hans: "邮件 ID"
+      pt_BR: "Email ID"
+      ja_JP: "メール ID"
+    human_description:
+      en_US: "The email ID from search results"
+      zh_Hans: "搜索结果中的邮件 ID"
+      pt_BR: "The email ID from search results"
+      ja_JP: "検索結果からのメール ID"
+    llm_description: "The email ID from search_email results"
+    form: llm
+  - name: attachment_index
+    type: number
+    required: false
+    default: 0
+    label:
+      en_US: "Attachment Index"
+      zh_Hans: "附件索引"
+      pt_BR: "Attachment Index"
+      ja_JP: "添付ファイルインデックス"
+    human_description:
+      en_US: "Index of attachment to download (0-based). Use -1 to list all attachments."
+      zh_Hans: "要下载的附件索引（从0开始）。使用 -1 列出所有附件。"
+      pt_BR: "Index of attachment to download (0-based). Use -1 to list all attachments."
+      ja_JP: "ダウンロードする添付ファイルのインデックス（0から）。-1ですべての添付ファイルを一覧表示。"
+    llm_description: "Index of attachment to download (0-based, default 0). Set to -1 to list all attachments without downloading content."
+    form: llm
+  - name: max_size_mb
+    type: number
+    required: false
+    default: 10
+    label:
+      en_US: "Max Size (MB)"
+      zh_Hans: "最大大小 (MB)"
+      pt_BR: "Max Size (MB)"
+      ja_JP: "最大サイズ (MB)"
+    human_description:
+      en_US: "Maximum attachment size to download in MB"
+      zh_Hans: "下载附件的最大大小（MB）"
+      pt_BR: "Maximum attachment size to download in MB"
+      ja_JP: "ダウンロードする添付ファイルの最大サイズ（MB）"
+    llm_description: "Maximum attachment size to download in MB. Default is 10MB. Larger attachments will be rejected."
+    form: llm
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      description: "Operation status: success or error"
+    message:
+      type: string
+      description: "Error message if failed"
+    email_id:
+      type: string
+      description: "The email ID"
+    email_subject:
+      type: string
+      description: "Email subject"
+    total_attachments:
+      type: integer
+      description: "Total number of attachments in the email"
+    attachment_index:
+      type: integer
+      description: "Index of the downloaded attachment"
+    filename:
+      type: string
+      description: "Attachment filename"
+    content_type:
+      type: string
+      description: "Attachment MIME type"
+    size:
+      type: integer
+      description: "Attachment size in bytes"
+    size_human:
+      type: string
+      description: "Human readable size"
+    content_base64:
+      type: string
+      description: "Base64 encoded attachment content"
+    attachments:
+      type: array
+      description: "List of attachments (when attachment_index is -1)"
+      items:
+        type: object
+        properties:
+          index:
+            type: integer
+          filename:
+            type: string
+          content_type:
+            type: string
+          size:
+            type: integer
+          size_human:
+            type: string
+extra:
+  python:
+    source: tools/get_attachment.py

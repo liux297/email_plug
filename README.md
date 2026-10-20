@@ -8,10 +8,11 @@
 
 ### Description
 
-A complete Dify plugin for email operations via SMTP/IMAP protocols. It includes six tools:
+A complete Dify plugin for email operations via SMTP/IMAP protocols. It includes seven tools:
 
 - **Send Email**: Send emails with HTML support, CC/BCC, attachments, and multiple recipients
 - **Search Email**: Advanced search by sender, subject, body keyword, date range, and read status
+- **Get Attachment**: Download attachments from emails or list all attachments
 - **Mark Email**: Mark emails as read or unread
 - **Delete Email**: Delete emails (move to trash or permanent delete)
 - **Move Email**: Move emails between folders
@@ -65,6 +66,13 @@ Powerful email search with filters:
 - Date range (start_date, end_date) or recent days
 - Unread only filter
 - Optional attachment retrieval
+
+#### Get Attachment
+Download attachments from emails:
+- List all attachments (set attachment_index to -1)
+- Download specific attachment by index
+- Supports files up to configurable size limit (default 10MB)
+- Returns base64 encoded content
 
 #### Mark Email
 Mark emails as read or unread using email IDs from search results.

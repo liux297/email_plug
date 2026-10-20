@@ -183,7 +183,7 @@ parameters:
       zh_Hans: "在结果中包含附件数据（base64）"
       pt_BR: "Include attachment data (base64) in results"
       ja_JP: "結果に添付ファイルデータ（base64）を含める"
-    llm_description: "Set to true to include attachment metadata and base64 content (limited to 10KB per file). May increase response size significantly."
+    llm_description: "Set to true to include attachment metadata and base64 content. Note: For large attachments, use get_attachment tool instead."
     form: llm
 output_schema:
   type: object

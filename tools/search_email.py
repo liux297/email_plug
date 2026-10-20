@@ -375,7 +375,7 @@ class SearchEmailTool(Tool):
                             "filename": filename_decoded,
                             "content_type": content_type,
                             "size": len(payload),
-                            "content_base64": base64.b64encode(payload).decode('utf-8')[:10000]
+                            "content_base64": base64.b64encode(payload).decode('utf-8')
                         })
                     continue
 

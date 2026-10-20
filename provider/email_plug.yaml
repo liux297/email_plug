@@ -142,6 +142,7 @@ credentials_for_provider:
 tools:
   - tools/send_email.yaml
   - tools/search_email.yaml
+  - tools/get_attachment.yaml
   - tools/mark_email.yaml
   - tools/delete_email.yaml
   - tools/move_email.yaml
