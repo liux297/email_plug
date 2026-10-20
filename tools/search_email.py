@@ -265,10 +265,11 @@ class SearchEmailTool(Tool):
 
             results = []
             for eid in reversed(email_ids[:max_results]):
-                status, msg_data = mail.fetch(eid, "(RFC822)")
+                status, msg_data = mail.fetch(eid, "(FLAGS RFC822)")
                 if status != "OK":
                     continue
 
+                flags_str = msg_data[0][0].decode() if isinstance(msg_data[0][0], bytes) else str(msg_data[0][0])
                 raw_email = msg_data[0][1]
                 msg = email.message_from_bytes(raw_email)
 
@@ -286,7 +287,12 @@ class SearchEmailTool(Tool):
 
                 has_replies = False
                 if has_reply_filter or True:
-                    has_replies = self._check_email_has_reply(mail, message_id, folder)
+                    has_replies = "\\Answered" in flags_str
+                    logger.info(f"Email {eid} flags: {flags_str}, has_replies from flags: {has_replies}")
+                    
+                    if not has_replies:
+                        has_replies = self._check_email_has_reply(mail, message_id, folder)
+                    
                     if has_reply_filter and not has_replies:
                         continue
 
@@ -475,25 +481,56 @@ class SearchEmailTool(Tool):
 
     def _check_email_has_reply(self, mail: imaplib.IMAP4, message_id: str, folder: str) -> bool:
         if not message_id:
+            logger.debug("No Message-ID, cannot check for replies")
             return False
         
+        logger.info(f"Checking replies for Message-ID: {message_id}")
+        
         try:
+            sent_folder_names = [
+                "Sent", "Sent Items", "Sent Messages", "[Gmail]/Sent Mail",
+                "&U0zJzQ-", "已发送", "&V4lXPpCuTvY-",  # 飞书/网易等中文文件夹名
+                "INBOX.Sent", "Sent Items"
+            ]
+            
             folders_to_check = [folder]
-            for check_folder in ["Sent", "Sent Items", "Sent Messages", "[Gmail]/Sent Mail"]:
-                if check_folder not in folders_to_check:
-                    folders_to_check.append(check_folder)
+            
+            try:
+                status, folder_list = mail.list()
+                if status == "OK":
+                    for folder_info in folder_list:
+                        if isinstance(folder_info, bytes):
+                            folder_info = folder_info.decode('utf-8', errors='ignore')
+                        for sent_name in sent_folder_names:
+                            if sent_name.lower() in folder_info.lower():
+                                if folder_info not in folders_to_check:
+                                    folders_to_check.append(folder_info.strip('"'))
+                                    logger.info(f"Found sent folder candidate: {folder_info}")
+            except Exception as e:
+                logger.warning(f"Failed to list folders: {e}")
+            
+            for sent_name in sent_folder_names:
+                if sent_name not in folders_to_check:
+                    folders_to_check.append(sent_name)
+            
+            logger.info(f"Will check folders: {folders_to_check}")
             
             for check_folder in folders_to_check:
                 try:
                     status, _ = mail.select(check_folder, readonly=True)
                     if status != "OK":
+                        logger.debug(f"Cannot select folder {check_folder}")
                         continue
+                    
+                    logger.info(f"Scanning folder: {check_folder}")
                     
                     status, all_messages = mail.search(None, 'ALL')
                     all_ids = all_messages[0].split() if all_messages[0] else []
                     
-                    scan_limit = min(len(all_ids), 500)
+                    scan_limit = min(len(all_ids), 1000)
                     scan_ids = all_ids[-scan_limit:]
+                    
+                    logger.info(f"Scanning {len(scan_ids)} emails in {check_folder}")
                     
                     for eid in scan_ids:
                         try:
@@ -509,14 +546,18 @@ class SearchEmailTool(Tool):
                             
                             if (in_reply_to and message_id in in_reply_to) or \
                                (references and message_id in references):
+                                logger.info(f"Found reply in {check_folder}: In-Reply-To={in_reply_to}, References={references}")
                                 mail.select(folder, readonly=True)
                                 return True
-                        except Exception:
+                        except Exception as e:
+                            logger.debug(f"Error checking email {eid}: {e}")
                             continue
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"Error scanning folder {check_folder}: {e}")
                     continue
             
             mail.select(folder, readonly=True)
+            logger.info("No replies found")
             return False
         except Exception as e:
             logger.warning(f"Failed to check reply for message {message_id}: {e}")

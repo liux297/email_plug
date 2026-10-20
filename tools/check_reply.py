@@ -74,7 +74,7 @@ class CheckReplyTool(Tool):
                 })
                 return
 
-            status, msg_data = mail.fetch(email_id.encode(), "(RFC822.HEADER)")
+            status, msg_data = mail.fetch(email_id.encode(), "(FLAGS RFC822.HEADER)")
             if status != "OK":
                 yield self.create_json_message({
                     "status": "error",
@@ -82,6 +82,7 @@ class CheckReplyTool(Tool):
                 })
                 return
 
+            flags_str = msg_data[0][0].decode() if isinstance(msg_data[0][0], bytes) else str(msg_data[0][0])
             header_data = msg_data[0][1]
             msg = email.message_from_bytes(header_data)
             
@@ -89,6 +90,9 @@ class CheckReplyTool(Tool):
             original_subject = decode_header_value(msg.get("Subject", ""))
             original_from = decode_header_value(msg.get("From", ""))
             original_date = msg.get("Date", "")
+            
+            has_answered_flag = "\\Answered" in flags_str
+            logger.info(f"Original email flags: {flags_str}, has \\Answered: {has_answered_flag}")
 
             logger.info(f"Original email Message-ID: {original_message_id}")
             logger.info(f"Original subject: {original_subject}")
@@ -200,6 +204,7 @@ class CheckReplyTool(Tool):
             mail.logout()
 
             logger.info(f"Found {len(replies)} replies")
+            has_any_replies = has_answered_flag or len(replies) > 0
 
             yield self.create_json_message({
                 "status": "success",
@@ -208,7 +213,8 @@ class CheckReplyTool(Tool):
                 "original_subject": original_subject,
                 "original_from": original_from,
                 "original_date": original_date,
-                "has_replies": len(replies) > 0,
+                "has_answered_flag": has_answered_flag,
+                "has_replies": has_any_replies,
                 "reply_count": len(replies),
                 "replies": replies
             })
