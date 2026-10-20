@@ -44,7 +44,7 @@ class GetAttachmentTool(Tool):
         email_id = tool_parameters.get("email_id", "").strip()
         attachment_index = int(tool_parameters.get("attachment_index", 0) or 0)
         max_size_mb = int(tool_parameters.get("max_size_mb", 10) or 10)
-        attachment_format = tool_parameters.get("attachment_format", "base64") or "base64"
+        attachment_format = tool_parameters.get("attachment_format", "url") or "url"
 
         if not email_id:
             yield self.create_json_message({

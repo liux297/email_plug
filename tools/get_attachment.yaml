@@ -80,7 +80,7 @@ parameters:
   - name: attachment_format
     type: string
     required: false
-    default: "base64"
+    default: "url"
     label:
       en_US: "Attachment Format"
       zh_Hans: "附件格式"
@@ -91,7 +91,7 @@ parameters:
       zh_Hans: "附件内容格式：'base64'（内联 base64 数据）或 'url'（上传到 Dify 文件服务并返回 URL）"
       pt_BR: "Format for attachment content: 'base64' (inline base64 data) or 'url' (upload to Dify file service and return URL)"
       ja_JP: "添付ファイル内容の形式：'base64'（インライン base64 データ）または 'url'（Dify ファイルサービスにアップロードして URL を返す）"
-    llm_description: "Format for attachment content. Options: 'base64' returns inline base64-encoded content; 'url' uploads to Dify file service and returns upload_file_id and preview_url. Default is 'base64'."
+    llm_description: "Format for attachment content. Options: 'url' uploads to Dify file service and returns upload_file_id and preview_url (default); 'base64' returns inline base64-encoded content."
     form: llm
 output_schema:
   type: object

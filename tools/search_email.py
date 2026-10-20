@@ -84,7 +84,7 @@ class SearchEmailTool(Tool):
         max_results = int(tool_parameters.get("max_results", 10) or 10)
         include_body = tool_parameters.get("include_body", True)
         include_attachments = tool_parameters.get("include_attachments", False)
-        attachment_format = tool_parameters.get("attachment_format", "base64") or "base64"
+        attachment_format = tool_parameters.get("attachment_format", "url") or "url"
         has_reply_filter = tool_parameters.get("has_reply", False)
 
         logger.info(f"IMAP: {imap_host}:{imap_port} ({imap_encrypt})")
