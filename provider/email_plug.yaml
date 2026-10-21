@@ -139,6 +139,20 @@ credentials_for_provider:
       en_US: "The password or app-specific password for the email account."
       zh_Hans: "邮箱密码或应用专用密码。"
 
+  # Optional: External Files URL
+  files_external_url:
+    type: "text-input"
+    required: false
+    label:
+      en_US: "Files External URL"
+      zh_Hans: "文件外部访问地址"
+    placeholder:
+      en_US: "e.g. http://10.0.44.30/dify"
+      zh_Hans: "例如 http://10.0.44.30/dify"
+    help:
+      en_US: "External URL for accessing uploaded files. If set, will replace internal container URLs (e.g. api:5001) with this URL. Leave empty to use Dify default."
+      zh_Hans: "上传文件的外部访问地址。如果设置，将替换内部容器 URL（如 api:5001）为此地址。留空则使用 Dify 默认地址。"
+
 tools:
   - tools/send_email.yaml
   - tools/search_email.yaml

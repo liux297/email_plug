@@ -86,6 +86,7 @@ class SearchEmailTool(Tool):
         include_attachments = tool_parameters.get("include_attachments", False)
         attachment_format = tool_parameters.get("attachment_format", "url") or "url"
         has_reply_filter = tool_parameters.get("has_reply", False)
+        files_external_url = credentials.get("files_external_url", "").strip()
 
         logger.info(f"IMAP: {imap_host}:{imap_port} ({imap_encrypt})")
         logger.info(f"Folder: {folder}, Sender: '{sender}', Subject: '{subject}'")
@@ -324,8 +325,8 @@ class SearchEmailTool(Tool):
                                     )
                                     att_info["upload_file_id"] = upload_resp.id
                                     preview_url = upload_resp.preview_url or ""
-                                    if "api:5001" in preview_url:
-                                        preview_url = preview_url.replace("http://api:5001", "http://10.0.44.30/dify")
+                                    if files_external_url and "api:5001" in preview_url:
+                                        preview_url = preview_url.replace("http://api:5001", files_external_url)
                                     att_info["url"] = preview_url
                                     att_info["format"] = "url"
                                     logger.info(f"  Uploaded attachment '{att['filename']}' -> {upload_resp.id}")
