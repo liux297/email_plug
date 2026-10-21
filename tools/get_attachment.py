@@ -2,6 +2,7 @@ import base64
 import email
 import imaplib
 import logging
+import os
 import ssl
 from collections.abc import Generator
 from email.header import decode_header
@@ -174,9 +175,23 @@ class GetAttachmentTool(Tool):
                         mimetype=att["content_type"]
                     )
                     result["upload_file_id"] = upload_resp.id
-                    result["url"] = upload_resp.preview_url or ""
+                    preview_url = upload_resp.preview_url or ""
+                    
+                    relative_path = ""
+                    if preview_url:
+                        from urllib.parse import urlparse
+                        parsed = urlparse(preview_url)
+                        relative_path = parsed.path + ("?" + parsed.query if parsed.query else "")
+                    
+                    external_base = os.environ.get("FILES_URL") or os.environ.get("CONSOLE_WEB_URL") or ""
+                    if external_base and relative_path:
+                        result["url"] = external_base.rstrip("/") + relative_path
+                    else:
+                        result["url"] = preview_url
+                    result["relative_path"] = relative_path
+                    
                     result["format"] = "url"
-                    logger.info(f"Uploaded attachment '{att['filename']}' -> {upload_resp.id}")
+                    logger.info(f"Uploaded attachment '{att['filename']}' -> {upload_resp.id}, url: {result['url']}")
                 except Exception as e:
                     logger.warning(f"Failed to upload attachment '{att['filename']}': {e}, falling back to base64")
                     result["content_base64"] = base64.b64encode(att["content"]).decode('utf-8')

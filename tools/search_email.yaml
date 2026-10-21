@@ -279,7 +279,10 @@ output_schema:
                   description: "Dify file ID (when format is url)"
                 url:
                   type: string
-                  description: "Preview URL (when format is url)"
+                  description: "Externally accessible download URL, built by joining Dify's configured external files prefix (FILES_URL / CONSOLE_WEB_URL) with the file's relative path (when format is url)"
+                relative_path:
+                  type: string
+                  description: "Relative path of the uploaded file, without the host prefix (when format is url)"
     error:
       type: string
       description: "Error message if search failed"

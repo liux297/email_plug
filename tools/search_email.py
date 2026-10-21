@@ -2,6 +2,7 @@ import base64
 import email
 import imaplib
 import logging
+import os
 import re
 import ssl
 from collections.abc import Generator
@@ -323,9 +324,23 @@ class SearchEmailTool(Tool):
                                         mimetype=att["content_type"]
                                     )
                                     att_info["upload_file_id"] = upload_resp.id
-                                    att_info["url"] = upload_resp.preview_url or ""
+                                    preview_url = upload_resp.preview_url or ""
+                                    
+                                    relative_path = ""
+                                    if preview_url:
+                                        from urllib.parse import urlparse
+                                        parsed = urlparse(preview_url)
+                                        relative_path = parsed.path + ("?" + parsed.query if parsed.query else "")
+                                    
+                                    external_base = os.environ.get("FILES_URL") or os.environ.get("CONSOLE_WEB_URL") or ""
+                                    if external_base and relative_path:
+                                        att_info["url"] = external_base.rstrip("/") + relative_path
+                                    else:
+                                        att_info["url"] = preview_url
+                                    att_info["relative_path"] = relative_path
+                                    
                                     att_info["format"] = "url"
-                                    logger.info(f"  Uploaded attachment '{att['filename']}' -> {upload_resp.id}")
+                                    logger.info(f"  Uploaded attachment '{att['filename']}' -> {upload_resp.id}, url: {att_info['url']}")
                                 except Exception as e:
                                     logger.warning(f"  Failed to upload attachment '{att['filename']}': {e}")
                                     att_info["content_base64"] = att["content_base64"]
