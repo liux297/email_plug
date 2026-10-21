@@ -174,7 +174,10 @@ class GetAttachmentTool(Tool):
                         mimetype=att["content_type"]
                     )
                     result["upload_file_id"] = upload_resp.id
-                    result["url"] = upload_resp.preview_url or ""
+                    preview_url = upload_resp.preview_url or ""
+                    if "api:5001" in preview_url:
+                        preview_url = preview_url.replace("http://api:5001", "http://10.0.44.30/dify")
+                    result["url"] = preview_url
                     result["format"] = "url"
                     logger.info(f"Uploaded attachment '{att['filename']}' -> {upload_resp.id}")
                 except Exception as e:
