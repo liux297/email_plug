@@ -116,21 +116,16 @@ class SearchEmailTool(Tool):
                 return
 
             criteria = []
-            subject_needs_client_filter = False
             body_needs_client_filter = bool(body_keyword)
 
             if sender:
-                if is_ascii_only(sender):
-                    criteria.append(f'FROM "{sender}"')
-                else:
-                    criteria.append(f'FROM "{sender}"')
+                criteria.append(f'FROM "{sender}"')
 
             if subject:
                 if is_ascii_only(subject):
                     criteria.append(f'SUBJECT "{subject}"')
                 else:
-                    subject_needs_client_filter = True
-                    logger.info(f"Subject contains non-ASCII, will filter client-side: '{subject}'")
+                    logger.info(f"Subject contains non-ASCII, will verify client-side: '{subject}'")
 
             if unread_only:
                 criteria.append('UNSEEN')
@@ -162,111 +157,80 @@ class SearchEmailTool(Tool):
                 logger.info(f"IMAP search query: {search_query}")
 
                 status, messages = mail.search(None, search_query)
-                email_ids = messages[0].split() if messages[0] else []
+                email_ids = messages[0].split() if messages and messages[0] else []
                 logger.info(f"IMAP server returned {len(email_ids)} results")
-
-                if subject_needs_client_filter or body_needs_client_filter or len(email_ids) < max_results:
-                    logger.info("Applying client-side filtering...")
-                    if email_ids:
-                        candidates = email_ids
-                    else:
-                        status, all_messages = mail.search(None, 'ALL')
-                        candidates = all_messages[0].split() if all_messages[0] else []
-
-                    scan_limit = min(len(candidates), max(max_results * 100, 1000))
-                    candidates = candidates[-scan_limit:]
-                    logger.info(f"Scanning {len(candidates)} emails locally")
-
-                    matched_ids = []
-                    for eid in reversed(candidates):
-                        if len(matched_ids) >= max_results:
-                            break
-
-                        fetch_fields = "(BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])"
-                        if body_needs_client_filter:
-                            fetch_fields = "(BODY.PEEK[])"
-
-                        status, msg_data = mail.fetch(eid, fetch_fields)
-                        if status != "OK":
-                            continue
-
-                        if body_needs_client_filter:
-                            raw_email = msg_data[0][1]
-                            msg = email.message_from_bytes(raw_email)
-                            body_text = self._extract_body(msg)
-                        else:
-                            header_data = msg_data[0][1]
-                            msg = email.message_from_bytes(header_data)
-                            body_text = ""
-
-                        from_value = decode_header_value(msg.get("From", ""))
-                        subject_value = decode_header_value(msg.get("Subject", ""))
-                        date_value = msg.get("Date", "")
-
-                        match = True
-                        if sender and sender.lower() not in from_value.lower():
-                            match = False
-                        if subject_needs_client_filter and subject.lower() not in subject_value.lower():
-                            match = False
-                        if body_needs_client_filter and body_keyword.lower() not in body_text.lower():
-                            match = False
-                        
-                        if (start_dt or end_dt) and date_value:
-                            try:
-                                from email.utils import parsedate_to_datetime
-                                email_dt = parsedate_to_datetime(date_value)
-                                email_dt = email_dt.replace(tzinfo=None)
-                                if start_dt and email_dt < start_dt:
-                                    match = False
-                                if end_dt and email_dt > end_dt + timedelta(days=1):
-                                    match = False
-                            except Exception as e:
-                                logger.warning(f"Failed to parse date '{date_value}': {e}")
-
-                        if match:
-                            matched_ids.append(eid)
-                            logger.info(f"  Match: {subject_value} (from: {from_value})")
-
-                    email_ids = matched_ids
-                else:
-                    email_ids = list(email_ids[-max_results:])
             else:
                 status, messages = mail.search(None, 'ALL')
-                all_ids = messages[0].split() if messages[0] else []
-                logger.info(f"Total emails in folder: {len(all_ids)}")
+                email_ids = messages[0].split() if messages and messages[0] else []
+                logger.info(f"No IMAP criteria, total emails in folder: {len(email_ids)}")
 
-                if subject_needs_client_filter or body_needs_client_filter:
-                    matched_ids = []
-                    scan_limit = min(len(all_ids), max(max_results * 100, 1000))
-                    scan_ids = all_ids[-scan_limit:]
-                    logger.info(f"Scanning last {len(scan_ids)} emails")
+            # Client-side verification only NARROWS the server-side result set; it
+            # must never re-widen with a fresh "ALL" search. Flag criteria such as
+            # ANSWERED / UNSEEN can only be evaluated by the IMAP server, so we keep
+            # the server results as the base and drop anything that does not truly
+            # match sender / subject / date / body. Some servers (e.g. Feishu) apply
+            # FROM/DATE loosely and return extra messages, so this pass is required.
+            needs_client_verify = bool(sender) or bool(subject) or bool(body_keyword) or bool(start_dt) or bool(end_dt)
+            if needs_client_verify:
+                logger.info("Applying client-side verification over server results...")
+                scan_limit = min(len(email_ids), max(max_results * 100, 1000))
+                candidates = email_ids[-scan_limit:]
+                logger.info(f"Verifying {len(candidates)} emails locally")
 
-                    for eid in reversed(scan_ids):
-                        if len(matched_ids) >= max_results:
-                            break
+                matched_ids = []
+                for eid in reversed(candidates):
+                    if len(matched_ids) >= max_results:
+                        break
 
-                        status, msg_data = mail.fetch(eid, "(BODY.PEEK[])")
-                        if status != "OK":
-                            continue
+                    fetch_fields = "(BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])"
+                    if body_needs_client_filter:
+                        fetch_fields = "(BODY.PEEK[])"
 
+                    status, msg_data = mail.fetch(eid, fetch_fields)
+                    if status != "OK":
+                        continue
+
+                    if body_needs_client_filter:
                         raw_email = msg_data[0][1]
                         msg = email.message_from_bytes(raw_email)
-                        subject_value = decode_header_value(msg.get("Subject", ""))
                         body_text = self._extract_body(msg)
+                    else:
+                        header_data = msg_data[0][1]
+                        msg = email.message_from_bytes(header_data)
+                        body_text = ""
 
-                        match = True
-                        if subject_needs_client_filter and subject.lower() not in subject_value.lower():
-                            match = False
-                        if body_needs_client_filter and body_keyword.lower() not in body_text.lower():
-                            match = False
+                    from_value = decode_header_value(msg.get("From", ""))
+                    subject_value = decode_header_value(msg.get("Subject", ""))
+                    date_value = msg.get("Date", "")
 
-                        if match:
-                            matched_ids.append(eid)
-                            logger.info(f"  Match: {subject_value}")
+                    match = True
+                    if sender and sender.lower() not in from_value.lower():
+                        match = False
+                    if subject and subject.lower() not in subject_value.lower():
+                        match = False
+                    if body_needs_client_filter and body_keyword.lower() not in body_text.lower():
+                        match = False
 
-                    email_ids = matched_ids
-                else:
-                    email_ids = list(all_ids[-max_results:])
+                    if (start_dt or end_dt) and date_value:
+                        try:
+                            from email.utils import parsedate_to_datetime
+                            email_dt = parsedate_to_datetime(date_value)
+                            email_dt = email_dt.replace(tzinfo=None)
+                            if start_dt and email_dt < start_dt:
+                                match = False
+                            if end_dt and email_dt > end_dt + timedelta(days=1):
+                                match = False
+                        except Exception as e:
+                            logger.warning(f"Failed to parse date '{date_value}': {e}")
+
+                    if match:
+                        matched_ids.append(eid)
+                        logger.info(f"  Match: {subject_value} (from: {from_value})")
+
+                email_ids = matched_ids
+                logger.info(f"After client-side verification: {len(email_ids)} results")
+            else:
+                email_ids = list(email_ids[-max_results:])
 
             results = []
             for eid in reversed(email_ids[:max_results]):
@@ -489,91 +453,3 @@ class SearchEmailTool(Tool):
             body = html_to_plain_text(html_body)
 
         return body, attachments
-
-    def _check_email_has_reply(self, mail: imaplib.IMAP4, message_id: str, folder: str) -> bool:
-        if not message_id:
-            logger.debug("No Message-ID, cannot check for replies")
-            return False
-        
-        logger.info(f"Checking replies for Message-ID: {message_id}")
-        
-        try:
-            sent_folder_names = [
-                "Sent", "Sent Items", "Sent Messages", "[Gmail]/Sent Mail",
-                "&U0zJzQ-", "已发送", "&V4lXPpCuTvY-",  # 飞书/网易等中文文件夹名
-                "INBOX.Sent", "Sent Items"
-            ]
-            
-            folders_to_check = [folder]
-            
-            try:
-                status, folder_list = mail.list()
-                if status == "OK":
-                    for folder_info in folder_list:
-                        if isinstance(folder_info, bytes):
-                            folder_info = folder_info.decode('utf-8', errors='ignore')
-                        for sent_name in sent_folder_names:
-                            if sent_name.lower() in folder_info.lower():
-                                if folder_info not in folders_to_check:
-                                    folders_to_check.append(folder_info.strip('"'))
-                                    logger.info(f"Found sent folder candidate: {folder_info}")
-            except Exception as e:
-                logger.warning(f"Failed to list folders: {e}")
-            
-            for sent_name in sent_folder_names:
-                if sent_name not in folders_to_check:
-                    folders_to_check.append(sent_name)
-            
-            logger.info(f"Will check folders: {folders_to_check}")
-            
-            for check_folder in folders_to_check:
-                try:
-                    status, _ = mail.select(check_folder, readonly=True)
-                    if status != "OK":
-                        logger.debug(f"Cannot select folder {check_folder}")
-                        continue
-                    
-                    logger.info(f"Scanning folder: {check_folder}")
-                    
-                    status, all_messages = mail.search(None, 'ALL')
-                    all_ids = all_messages[0].split() if all_messages[0] else []
-                    
-                    scan_limit = min(len(all_ids), 1000)
-                    scan_ids = all_ids[-scan_limit:]
-                    
-                    logger.info(f"Scanning {len(scan_ids)} emails in {check_folder}")
-                    
-                    for eid in scan_ids:
-                        try:
-                            status, msg_data = mail.fetch(eid, "(BODY.PEEK[HEADER.FIELDS (IN-REPLY-TO REFERENCES)])")
-                            if status != "OK":
-                                continue
-                            
-                            header_data = msg_data[0][1]
-                            reply_msg = email.message_from_bytes(header_data)
-                            
-                            in_reply_to = reply_msg.get("In-Reply-To", "").strip()
-                            references = reply_msg.get("References", "").strip()
-                            
-                            if (in_reply_to and message_id in in_reply_to) or \
-                               (references and message_id in references):
-                                logger.info(f"Found reply in {check_folder}: In-Reply-To={in_reply_to}, References={references}")
-                                mail.select(folder, readonly=True)
-                                return True
-                        except Exception as e:
-                            logger.debug(f"Error checking email {eid}: {e}")
-                            continue
-                except Exception as e:
-                    logger.debug(f"Error scanning folder {check_folder}: {e}")
-                    continue
-            
-            mail.select(folder, readonly=True)
-            logger.info("No replies found")
-            return False
-        except Exception as e:
-            logger.warning(f"Failed to check reply for message {message_id}: {e}")
-            try:
-                mail.select(folder, readonly=True)
-            except Exception:
-                pass
-            return False

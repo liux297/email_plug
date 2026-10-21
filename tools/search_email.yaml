@@ -211,11 +211,11 @@ parameters:
       pt_BR: "Has Reply Filter"
       ja_JP: "返信フィルタ"
     human_description:
-      en_US: "Filter emails by reply status. When enabled, only returns emails that have been replied to. Note: This may slow down search."
-      zh_Hans: "按回复状态筛选邮件。启用时仅返回已被回复的邮件。注意：这会减慢搜索速度。"
-      pt_BR: "Filter emails by reply status. When enabled, only returns emails that have been replied to. Note: This may slow down search."
-      ja_JP: "返信ステータスでメールをフィルタ。有効にすると、返信があったメールのみ返します。注意：検索が遅くなる可能性があります。"
-    llm_description: "Set to true to only return emails that have been replied to. This checks In-Reply-To and References headers across all folders. Note: This significantly slows down search as it requires checking each email."
+      en_US: "When enabled, only returns emails that have been replied to (IMAP \\Answered flag). When disabled, no reply filtering is applied."
+      zh_Hans: "启用时仅返回已被回复的邮件（依据 IMAP \\Answered 标志）；关闭时不按回复状态过滤。"
+      pt_BR: "When enabled, only returns emails that have been replied to (IMAP \\Answered flag). When disabled, no reply filtering is applied."
+      ja_JP: "有効にすると、返信済みのメール（IMAP \\Answered フラグ）のみ返します。無効の場合は返信状態で絞り込みません。"
+    llm_description: "Set to true to only return emails that have been replied to, based on the IMAP \\Answered flag. Set to false (default) to skip reply filtering and return all emails matching the other criteria."
     form: llm
 output_schema:
   type: object
