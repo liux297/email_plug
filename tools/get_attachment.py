@@ -45,7 +45,6 @@ class GetAttachmentTool(Tool):
         attachment_index = int(tool_parameters.get("attachment_index", 0) or 0)
         max_size_mb = int(tool_parameters.get("max_size_mb", 10) or 10)
         attachment_format = tool_parameters.get("attachment_format", "url") or "url"
-        files_external_url = credentials.get("files_external_url", "").strip()
 
         if not email_id:
             yield self.create_json_message({
@@ -175,10 +174,7 @@ class GetAttachmentTool(Tool):
                         mimetype=att["content_type"]
                     )
                     result["upload_file_id"] = upload_resp.id
-                    preview_url = upload_resp.preview_url or ""
-                    if files_external_url and "api:5001" in preview_url:
-                        preview_url = preview_url.replace("http://api:5001", files_external_url)
-                    result["url"] = preview_url
+                    result["url"] = upload_resp.preview_url or ""
                     result["format"] = "url"
                     logger.info(f"Uploaded attachment '{att['filename']}' -> {upload_resp.id}")
                 except Exception as e:
