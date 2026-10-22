@@ -106,10 +106,22 @@ class SearchEmailTool(Tool):
 
             mail.login(email_account, email_password)
             logger.info("Logged in, selecting folder...")
-            status, _ = mail.select(folder, readonly=True)
+            status, data = mail.select(folder, readonly=True)
             if status != "OK":
                 yield self.create_json_message({
                     "error": f"Failed to select folder: {folder}",
+                    "total_found": 0,
+                    "emails": []
+                })
+                return
+
+            total_in_folder = data[0].decode() if data and data[0] else "unknown"
+            logger.info(f"Folder selected, total emails: {total_in_folder}")
+
+            # Debug: return connection info
+            if not criteria:
+                yield self.create_json_message({
+                    "debug_info": f"Connected to {imap_host}:{imap_port} as {email_account}, folder={folder}, total_emails={total_in_folder}",
                     "total_found": 0,
                     "emails": []
                 })
