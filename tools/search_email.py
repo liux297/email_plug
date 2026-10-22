@@ -111,25 +111,21 @@ class SearchEmailTool(Tool):
                 yield self.create_json_message({
                     "error": f"Failed to select folder: {folder}",
                     "total_found": 0,
-                    "emails": []
+                    "emails": [],
+                    "debug_account": email_account
                 })
                 return
 
             total_in_folder = data[0].decode() if data and data[0] else "unknown"
             logger.info(f"Folder selected, total emails: {total_in_folder}")
 
-            criteria = []
-            body_needs_client_filter = bool(body_keyword)
-
-            # Debug: return connection info when no filters
-            has_any_filter = bool(sender) or bool(subject) or bool(body_keyword) or bool(start_date) or bool(end_date) or days > 0 or unread_only or has_reply_filter
-            if not has_any_filter:
-                yield self.create_json_message({
-                    "debug_info": f"Connected to {imap_host}:{imap_port} as {email_account}, folder={folder}, total_emails={total_in_folder}",
-                    "total_found": 0,
-                    "emails": []
-                })
-                return
+            # Always return debug info
+            yield self.create_json_message({
+                "debug_info": f"Connected as {email_account} to {imap_host}:{imap_port}, folder={folder}, total_emails={total_in_folder}",
+                "total_found": 0,
+                "emails": []
+            })
+            return
 
             if sender:
                 criteria.append(f'FROM "{sender}"')
