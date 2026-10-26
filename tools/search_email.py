@@ -88,8 +88,11 @@ class SearchEmailTool(Tool):
         attachment_format = tool_parameters.get("attachment_format", "url") or "url"
         has_reply_filter = tool_parameters.get("has_reply", False)
 
+        # Parse multiple senders (comma or semicolon separated)
+        sender_list = [s.strip() for s in re.split(r'[,;]', sender) if s.strip()] if sender else []
+
         logger.info(f"IMAP: {imap_host}:{imap_port} ({imap_encrypt})")
-        logger.info(f"Folder: {folder}, Sender: '{sender}', Subject: '{subject}'")
+        logger.info(f"Folder: {folder}, Senders: {sender_list}, Subject: '{subject}'")
         logger.info(f"Body keyword: '{body_keyword}', Date range: {start_date} to {end_date}, Days: {days}")
         logger.info(f"Unread only: {unread_only}, Max results: {max_results}, Has reply filter: {has_reply_filter}")
 
@@ -119,16 +122,18 @@ class SearchEmailTool(Tool):
             total_in_folder = data[0].decode() if data and data[0] else "unknown"
             logger.info(f"Folder selected, total emails: {total_in_folder}")
 
-            # Always return debug info
-            yield self.create_json_message({
-                "debug_info": f"Connected as {email_account} to {imap_host}:{imap_port}, folder={folder}, total_emails={total_in_folder}",
-                "total_found": 0,
-                "emails": []
-            })
-            return
+            criteria = []
+            body_needs_client_filter = bool(body_keyword)
 
-            if sender:
-                criteria.append(f'FROM "{sender}"')
+            if sender_list:
+                if len(sender_list) == 1:
+                    criteria.append(f'FROM "{sender_list[0]}"')
+                else:
+                    or_criteria = " OR ".join([f'FROM "{s}"' for s in sender_list])
+                    if len(sender_list) > 2:
+                        or_criteria = "(" + or_criteria + ")"
+                    criteria.append(or_criteria)
+                logger.info(f"Sender filter: {sender_list}")
 
             if subject:
                 if is_ascii_only(subject):
@@ -179,7 +184,7 @@ class SearchEmailTool(Tool):
             # the server results as the base and drop anything that does not truly
             # match sender / subject / date / body. Some servers (e.g. Feishu) apply
             # FROM/DATE loosely and return extra messages, so this pass is required.
-            needs_client_verify = bool(sender) or bool(subject) or bool(body_keyword) or bool(start_dt) or bool(end_dt)
+            needs_client_verify = bool(sender_list) or bool(subject) or bool(body_keyword) or bool(start_dt) or bool(end_dt)
             if needs_client_verify:
                 logger.info("Applying client-side verification over server results...")
                 scan_limit = min(len(email_ids), max(max_results * 100, 1000))
@@ -213,8 +218,10 @@ class SearchEmailTool(Tool):
                     date_value = msg.get("Date", "")
 
                     match = True
-                    if sender and sender.lower() not in from_value.lower():
-                        match = False
+                    if sender_list:
+                        from_lower = from_value.lower()
+                        if not any(s.lower() in from_lower for s in sender_list):
+                            match = False
                     if subject and subject.lower() not in subject_value.lower():
                         match = False
                     if body_needs_client_filter and body_keyword.lower() not in body_text.lower():

@@ -39,11 +39,11 @@ parameters:
       pt_BR: "Sender"
       ja_JP: "送信者"
     human_description:
-      en_US: "Filter by sender email address or name (supports partial match)"
-      zh_Hans: "按发件人邮箱地址或名称筛选（支持部分匹配）"
-      pt_BR: "Filter by sender email address or name (supports partial match)"
-      ja_JP: "送信者のメールアドレスまたは名前でフィルタ（部分一致対応）"
-    llm_description: "Filter emails by sender email address or name. Supports partial matching, e.g. 'john' matches 'john@example.com'"
+      en_US: "Filter by sender email address or name. Supports multiple senders separated by commas or semicolons (e.g. 'alice@example.com, bob@example.com')"
+      zh_Hans: "按发件人邮箱地址或名称筛选。支持多个发件人，用逗号或分号分隔（如 'alice@example.com, bob@example.com'）"
+      pt_BR: "Filter by sender email address or name. Supports multiple senders separated by commas or semicolons (e.g. 'alice@example.com, bob@example.com')"
+      ja_JP: "送信者のメールアドレスまたは名前でフィルタ。複数の送信者はカンマまたはセミコロンで区切ります（例：'alice@example.com, bob@example.com'）"
+    llm_description: "Filter emails by sender email address or name. Supports partial matching. Multiple senders can be specified using commas or semicolons (e.g. 'john@example.com, jane@example.com')"
     form: llm
   - name: subject
     type: string
