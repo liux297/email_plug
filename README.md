@@ -3,15 +3,15 @@
 **Author:** liux297
 **Contact:** 297218348@qq.com
 **Repository:** https://github.com/liux297/email_plug
-**Version:** 0.0.7
+**Version:** 0.1.7
 **Type:** tool
 
 ### Description
 
-A complete Dify plugin for email operations via SMTP/IMAP protocols. It includes nine tools:
+A complete Dify plugin for email operations via SMTP/IMAP protocols. It includes eight tools:
 
 - **Send Email**: Send emails with HTML support, CC/BCC, attachments, and multiple recipients
-- **Search Email**: Advanced search by sender, subject, body keyword, date range, read status, and reply status
+- **Search Email**: Advanced search by sender (multiple senders supported), subject, body keyword, date range, read status, and reply status
 - **Get Attachment**: Download attachments from emails or list all attachments, with Dify file service integration
 - **Check Reply**: Check if a specific email has been replied to
 - **Mark Email**: Mark emails as read or unread
@@ -48,6 +48,10 @@ A complete Dify plugin for email operations via SMTP/IMAP protocols. It includes
 > **QQ Mail**: Use authorization code instead of login password
 > **Outlook**: IMAP server is `outlook.office365.com`
 
+### Connection Requirements
+
+The plugin connects directly from your Dify instance to your mail server over SMTP (sending) and IMAP (searching/management). You need the host address and port of your provider's SMTP and IMAP servers (see the table below), and the Dify instance must have outbound network access to those hosts. Credentials are stored encrypted in Dify and never logged.
+
 ### Tools
 
 #### Send Email
@@ -61,7 +65,7 @@ Send emails with advanced features:
 #### Search Email
 Powerful email search with filters:
 - Folder selection (INBOX, Sent, Archive, etc.)
-- Sender filter (supports partial match)
+- Sender filter (single sender or multiple senders separated by comma/semicolon, matching any of them)
 - Subject keyword (supports Chinese/non-ASCII)
 - Body keyword search
 - Date range (start_date, end_date) or recent days
